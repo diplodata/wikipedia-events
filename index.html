@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="bootstrap.min.css">
+  <script src="jquery.min.js"></script>
+  <script src="bootstrap.min.js"></script>
+  <script src="d3.v4.min.js"></script>
+  <style>
+    body, html{
+      background-color: #F1F3F3
+    }
+    #events {
+      padding-top: 10px;
+    }
+    .eventItem{
+      padding-bottom: 10px;
+    }
+    .eventItem *, input {
+      font-size: 18px;
+    }
+    @font-face {
+      font-family: 'Linux Libertine Capitals';
+      font-style: normal;
+      font-weight: normal;
+      src: local('Linux Libertine Capitals'), url('LinLibertineC_Re-4.0_.1_.woff') format('woff');
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class='row'>
+      <img src='logo.png' style="width: 100px; height: 100px; display: inline-block;"  />
+      <h1 style="display: inline-block; padding-left: 10px; padding-top: 5px; font-family:'Linux Libertine Capitals';font-weight:normal;font-size:32px" >
+        <span style="font-family:'Linux Libertine Capitals';font-weight:normal;font-size:46px">W</span>IKIPEDIA events checker</h1>
+    </div>
+
+    <div class='row' style="padding-top: 10px; padding-left: 15px;">
+
+      <label for="query">Search term</label>
+      <input type="text" id="query" value='' title='Boolean search is supported' style="min-width: 300px;"> &nbsp; &nbsp; &nbsp;
+
+      <label id="allRecordsLab" for="allRecords" title="(Server by default returns max 100 records. Check to increase to 1,000)">Max 1000 records</label>
+      <input id="allRecords" type="checkbox" title="(Server by default returns max 100 records. Check to increase to 1,000)"/> &nbsp; &nbsp; &nbsp;
+
+      <label id="revOrderLab" for="revOrder">Reverse order</label>
+      <input id="revOrder" type="checkbox" title="(i.e. newset records first)"/> &nbsp; &nbsp; &nbsp;
+
+      <button onclick="newCall()" width=15 height=15>Get events</button>
+    </div>
+
+      <hr style="border-top: 2px solid #ccc;"/>
+    <div class='row'><div id='report' class='col-sm-12'></div></div>
+    <div class='row'><div id='events' class='col-sm-12'></div></div>
+  </div>
+  <br />
+
+<script>
+
+var app_width = d3.select('.container').style('width').replace(/px/g, '');
+var reportHeight = window.innerHeight - d3.select('#report').style('height').replace(/px/g, '');
+
+var events = d3.select('#events');
+events.attr('height', reportHeight);
+events.attr('width', app_width);
+
+function newCall(){
+  var searchTerm = document.getElementById('query').value
+  if(searchTerm == '') return;
+  var newCall = 'http://ec2-52-15-104-71.us-east-2.compute.amazonaws.com:9136/wiki?headers=T&html=T&q=' + searchTerm;
+  // var newCall = 'http://127.0.0.1:6167/wiki?headers=T&html=T&q=' + searchTerm;
+  if(document.getElementById("allRecords").checked) newCall += '&all=TRUE';
+  if(document.getElementById("revOrder").checked) newCall += '&reverse=TRUE';
+
+  d3.json(newCall, function(error, data) {
+    if (error) throw error;
+
+    // sort array by date
+    for(i=0; i<data.length; i++){ data[i].date2 = new Date(data[i].date); }
+    data.sort(function compare(a, b) {
+      var dateA = a.date2;
+      var dateB = b.date2;
+      if(document.getElementById("revOrder").checked) return dateB - dateA;
+      return dateA - dateB;
+    });
+
+    dat = data;
+    events.selectAll('div').remove();
+    events.selectAll('div')
+      .data(data).enter().append("div")
+      .html(function(d){
+        var item = d.html.replace(/<li>/, "<li><b>" + d.date + '</b>: ');
+        return item;
+      })
+      // .attr('id', function(d){ return 'eventid' + d.event_id; })
+      .attr('class', 'eventItem');
+  });
+}
+
+newCall();
+
+</script>
+</body>
