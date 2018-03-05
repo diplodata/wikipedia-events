@@ -77,7 +77,7 @@ events.attr('width', app_width);
 function newCall(){
   var searchTerm = document.getElementById('query').value
   if(searchTerm == '') return;
-  var newCall = 'http://ec2-52-15-104-71.us-east-2.compute.amazonaws.com:9136/wiki?headers=T&html=T&q=' + searchTerm;
+  var newCall = 'http://ec2-18-222-33-87.us-east-2.compute.amazonaws.com:9136/wiki?headers=T&html=T&q=' + searchTerm;
   // var newCall = 'http://127.0.0.1:6167/wiki?headers=T&html=T&q=' + searchTerm;
   if(document.getElementById("allRecords").checked) newCall += '&all=TRUE';
   if(document.getElementById("revOrder").checked) newCall += '&reverse=TRUE';
