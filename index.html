@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Wikipedia events checker</title>
+  <title>Wikipedia events</title>
   <meta charset="utf-8">
   <meta name="author" content="Robin Edwards">
   <meta property="og:locale" content="en_US" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Wikipedia events checker" />
-  <meta property="og:description" content="An open data web tool by the Foreign & Commonwealth Office" />
+  <meta property="og:description" content="Search for Wikipedia events" />
   <meta property="og:url" content="https://diplodata.github.io/wikipedia-events" />
   <meta property="og:site_name" content="Wikipedia events checker" />
   <meta property="og:image" content="https://cdn.rawgit.com/diplodata/wikipedia-events/master/screenshot.png" />
@@ -42,7 +42,7 @@
     <div class='row'>
       <img src='logo.png' style="width: 100px; height: 100px; display: inline-block;"  />
       <h1 style="display: inline-block; padding-left: 10px; padding-top: 5px; font-family:'Linux Libertine Capitals';font-weight:normal;font-size:32px" >
-        <span style="font-family:'Linux Libertine Capitals';font-weight:normal;font-size:46px">W</span>IKIPEDIA events checker</h1>
+        <span style="font-family:'Linux Libertine Capitals';font-weight:normal;font-size:46px">W</span>IKIPEDIA events</h1>
     </div>
 
     <div class='row' style="padding-top: 10px; padding-left: 15px;">
@@ -67,6 +67,7 @@
 
 <script>
 
+var d;
 var app_width = d3.select('.container').style('width').replace(/px/g, '');
 var reportHeight = window.innerHeight - d3.select('#report').style('height').replace(/px/g, '');
 
@@ -77,29 +78,25 @@ events.attr('width', app_width);
 function newCall(){
   var searchTerm = document.getElementById('query').value
   if(searchTerm == '') return;
-  var newCall = 'http://ec2-18-222-33-87.us-east-2.compute.amazonaws.com:9136/wiki?headers=T&html=T&q=' + searchTerm;
-  // var newCall = 'http://127.0.0.1:6167/wiki?headers=T&html=T&q=' + searchTerm;
-  if(document.getElementById("allRecords").checked) newCall += '&all=TRUE';
-  if(document.getElementById("revOrder").checked) newCall += '&reverse=TRUE';
+  // specify API server
+  var newCall = 'http://localhost:4444/wiki?text=' + searchTerm;
+  if(document.getElementById("allRecords").checked) newCall += '&max_records=1000';
+  if(document.getElementById("revOrder").checked){
+    newCall += '&_arrange_by=-id';
+  } else { newCall += '&_arrange_by=id'; }
+  console.log(newCall);
 
   d3.json(newCall, function(error, data) {
+    d = data;
     if (error) throw error;
-
-    // sort array by date
-    for(i=0; i<data.length; i++){ data[i].date2 = new Date(data[i].date); }
-    data.sort(function compare(a, b) {
-      var dateA = a.date2;
-      var dateB = b.date2;
-      if(document.getElementById("revOrder").checked) return dateB - dateA;
-      return dateA - dateB;
-    });
 
     dat = data;
     events.selectAll('div').remove();
     events.selectAll('div')
       .data(data).enter().append("div")
       .html(function(d){
-        var item = d.html.replace(/<li>/, "<li><b>" + d.date + '</b>: ');
+        var item = d.html.replace(/<li>/, "<li><b>" + d.date + '</b>: ')
+             .replace(/href=\"\/wiki/g, 'href="https://en.wikipedia.org/wiki');
         return item;
       })
       // .attr('id', function(d){ return 'eventid' + d.event_id; })
@@ -111,3 +108,4 @@ newCall();
 
 </script>
 </body>
+
